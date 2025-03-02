@@ -1,9 +1,13 @@
 import "@/styles/globals.css";
 import { useEffect, useState } from 'react';
 import type { AppProps } from "next/app";
+import Particles, { initParticlesEngine } from "@tsparticles/react";
+import { loadFull } from "tsparticles";
+import particlesConfig from "@/particlesjs-config.json";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [init, setInit] = useState(false);
 
   useEffect(() => {
     // クライアントサイドでのみ実行
@@ -23,6 +27,11 @@ function MyApp({ Component, pageProps }: AppProps) {
       
       auth();
     }
+    initParticlesEngine(async (engine) => { 
+      await loadFull(engine);
+    }).then(() => {
+      setInit(true);
+    });
   }, []);
 
   // 認証が通るまでは何も表示しない
@@ -30,7 +39,18 @@ function MyApp({ Component, pageProps }: AppProps) {
     return null;
   }
 
-  return <Component {...pageProps} />;
+  console.log(init);
+
+  return (
+    <div>
+      <Component {...pageProps} />
+      {init && (
+        <div style={{ zIndex: -10 }}>
+          <Particles url="particlesjs-config.json"/>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default MyApp;
