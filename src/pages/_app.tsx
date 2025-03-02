@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import type { AppProps } from "next/app";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadFull } from "tsparticles";
-import particlesConfig from "@/particlesjs-config.json";
+// 参考: https://www.php.cn/ja/faq/1796606378.html
+// 参考: https://vincentgarreau.com/particles.js/#default
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
