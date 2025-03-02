@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaMicrophone, FaStop, FaTimes, FaRedo, FaChartLine, FaCog } from 'react-icons/fa';
+import { FaMicrophone, FaStop, FaTimes, FaRedo, FaCog } from 'react-icons/fa';
 import OpenAI from 'openai';
 import { ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam, ChatCompletionAssistantMessageParam } from 'openai/resources/chat';
 import styled from '@emotion/styled';
@@ -229,7 +229,7 @@ const styles = {
     overflow: 'hidden',
     '&::before': {
       content: '""',
-      position: 'absolute',
+      position: 'absolute' as const,
       top: '0',
       left: '0',
       width: '100%',
@@ -249,7 +249,7 @@ const styles = {
       color: '#6B7280',
       fontSize: '0.875rem',
       fontWeight: '500',
-      textTransform: 'uppercase',
+      textTransform: 'uppercase' as const,
       letterSpacing: '0.05em',
     },
     '& span:last-child': {
@@ -348,16 +348,28 @@ const styles = {
 };
 
 const globalStyles = `
+  :root {
+    --bg-gradient: linear-gradient(145deg, #ffffff, #f5f7fa);
+    --bg-animation: linear-gradient(45deg, rgba(79, 70, 229, 0.03) 0%, rgba(124, 58, 237, 0.03) 100%);
+    --text-primary: #1F2937;
+    --text-secondary: #6B7280;
+    --bg-card: rgba(255, 255, 255, 0.8);
+    --border-color: rgba(229, 231, 235, 0.5);
+  }
+
+  :root[data-theme='dark'] {
+    --bg-gradient: linear-gradient(145deg, #1a1b1e, #2d2e32);
+    --bg-animation: linear-gradient(45deg, rgba(79, 70, 229, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+    --text-primary: #F3F4F6;
+    --text-secondary: #D1D5DB;
+    --bg-card: rgba(31, 41, 55, 0.8);
+    --border-color: rgba(75, 85, 99, 0.3);
+  }
+
   @keyframes moveGradient {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   @keyframes floatingBubbles {
@@ -370,16 +382,6 @@ const globalStyles = `
     100% {
       transform: translateY(0) rotate(360deg);
     }
-  }
-
-  :root {
-    --bg-gradient: linear-gradient(145deg, #ffffff, #f5f7fa);
-    --bg-animation: linear-gradient(45deg, rgba(79, 70, 229, 0.03) 0%, rgba(124, 58, 237, 0.03) 100%);
-  }
-
-  :root[data-theme='dark'] {
-    --bg-gradient: linear-gradient(145deg, #1a1b1e, #2d2e32);
-    --bg-animation: linear-gradient(45deg, rgba(79, 70, 229, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
   }
 `;
 
@@ -498,6 +500,7 @@ export default function EnglishConversation() {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [isCancellable, setIsCancellable] = useState(false);
   const [isJapaneseMode, setIsJapaneseMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [usage, setUsage] = useState<Usage>({
     promptTokens: 0,
     completionTokens: 0,
@@ -505,7 +508,6 @@ export default function EnglishConversation() {
     estimatedCost: 0
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -537,7 +539,7 @@ export default function EnglishConversation() {
   }, []);
 
   useEffect(() => {
-    // システムの設定を確認
+    // システムのダークモード設定を確認
     const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
     const updateTheme = (e: MediaQueryListEvent | MediaQueryList) => {
@@ -554,6 +556,14 @@ export default function EnglishConversation() {
     return () => darkModeMediaQuery.removeEventListener('change', updateTheme);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  const toggleDarkMode = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+  }, []);
+
   const startListening = useCallback(() => {
     if (recognition) {
       try {
@@ -566,12 +576,12 @@ export default function EnglishConversation() {
     }
   }, [recognition]);
 
-  const getSystemMessage = () => ({
+  const getSystemMessage = useCallback(() => ({
     role: "system",
     content: isJapaneseMode 
       ? "あなたは英語学習を支援する日本人向けの英語教師です。ユーザーからの日本語での質問に対して、英語の意味や使い方を丁寧に説明してください。必要に応じて例文も提供してください。回答は日本語で行ってください。"
       : "You are a helpful English conversation partner. Respond naturally to the user's input and help them improve their English. Keep responses concise and conversational."
-  } as ChatCompletionSystemMessageParam);
+  } as ChatCompletionSystemMessageParam), [isJapaneseMode]);
 
   useEffect(() => {
     if (recognition) {
@@ -667,8 +677,8 @@ export default function EnglishConversation() {
       <div css={styles.header}>
         <button
           css={styles.configButton}
-          onClick={() => setIsModalOpen(true)}
-          aria-label="設定"
+          onClick={toggleDarkMode}
+          aria-label={isDarkMode ? "ライトモードに切り替え" : "ダークモードに切り替え"}
         >
           <FaCog />
         </button>
